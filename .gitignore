@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+frontend/dist/
+mobile/dist/
+mobile/unpackage/
+*.tar.gz
+backend/dcim-api
+backend/dcim-api-*
+*.exe
+
+# Production configs & secrets (never commit)
+backend/configs/production.yaml
+backend/configs/ai.env
+.env
+.env.*
+*.key
+*.pem
+
+# Data & uploads
+*.db
+*.sqlite*
+backups/
+uploads/
+backend/data/
+
+# Internal ops scripts / logs (contain production environment info)
+scripts/
+overnight-*.md
+mobile/ci/
+*.log
+*.bak
+*.bak_*
+__pycache__/
+*.pyc
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

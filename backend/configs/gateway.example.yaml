@@ -1,0 +1,7 @@
+# dcim-gateway 站点边缘网关配置示例
+# 部署在数据中心站点侧，连接中心站
+server: "http://127.0.0.1:8095"   # 中心站 dcim-api 地址
+code: "GW-DEMO-01"                 # 网关编码（在中心站注册后获得）
+secret: "CHANGE_ME"                # 接入密钥（注册网关时一次性显示）
+poll_sec: 5                        # 指令轮询周期
+collect_sec: 5                     # 采集周期（P3 生效）

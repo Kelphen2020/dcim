@@ -1,0 +1,37 @@
+{
+  "pages": [
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "工作台", "enablePullDownRefresh": true } },
+    { "path": "pages/login/login", "style": { "navigationBarTitleText": "登录" } },
+    { "path": "pages/alert/alert", "style": { "navigationBarTitleText": "告警中心", "enablePullDownRefresh": true } },
+    { "path": "pages/alert/detail", "style": { "navigationBarTitleText": "告警详情" } },
+    { "path": "pages/wo/wo", "style": { "navigationBarTitleText": "运维工单", "enablePullDownRefresh": true } },
+    { "path": "pages/wo/detail", "style": { "navigationBarTitleText": "工单详情" } },
+    { "path": "pages/wo/create", "style": { "navigationBarTitleText": "新建工单" } },
+    { "path": "pages/scan/scan", "style": { "navigationBarTitleText": "扫码巡检", "enablePullDownRefresh": true } },
+    { "path": "pages/scan/exec", "style": { "navigationBarTitleText": "巡检执行" } },
+    { "path": "pages/notify/notify", "style": { "navigationBarTitleText": "消息中心" } },
+    { "path": "pages/me/me", "style": { "navigationBarTitleText": "我的" } },
+    { "path": "pages/me/push", "style": { "navigationBarTitleText": "推送设置" } },
+    { "path": "pages/me/server", "style": { "navigationBarTitleText": "服务器设置" } },
+    { "path": "pages/asset/assets", "style": { "navigationBarTitleText": "资产速查", "enablePullDownRefresh": true } },
+    { "path": "pages/asset/detail", "style": { "navigationBarTitleText": "资产详情" } },
+    { "path": "pages/stocktake/list", "style": { "navigationBarTitleText": "资产盘点", "enablePullDownRefresh": true } },
+    { "path": "pages/stocktake/exec", "style": { "navigationBarTitleText": "盘点执行" } },
+    { "path": "pages/monitor/monitor", "style": { "navigationBarTitleText": "监控速览", "enablePullDownRefresh": true } },
+    { "path": "pages/duty/roster", "style": { "navigationBarTitleText": "值班日历" } },
+    { "path": "pages/duty/handover", "style": { "navigationBarTitleText": "值班交接" } },
+    { "path": "pages/change/changes", "style": { "navigationBarTitleText": "变更审批", "enablePullDownRefresh": true } },
+    { "path": "pages/change/detail", "style": { "navigationBarTitleText": "变更详情" } },
+    { "path": "pages/summary/summary", "style": { "navigationBarTitleText": "管理摘要", "enablePullDownRefresh": true } },
+    { "path": "pages/maint/maint", "style": { "navigationBarTitleText": "维保与备件", "enablePullDownRefresh": true } },
+    { "path": "pages/report/report", "style": { "navigationBarTitleText": "巡检报告", "enablePullDownRefresh": true } },
+    { "path": "pages/report/detail", "style": { "navigationBarTitleText": "报告详情" } }
+  ],
+  "globalStyle": {
+    "navigationStyle": "custom",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "DCIM 移动运维",
+    "navigationBarBackgroundColor": "#1F4E9C",
+    "backgroundColor": "#F4F6FA"
+  }
+}
