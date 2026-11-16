@@ -349,7 +349,8 @@ func (h *Handler) DeleteWorkOrder(c *gin.Context) {
 
 // usernameOf 从上下文取用户名
 func usernameOf(c *gin.Context) string {
-	_, name := middleware.GetCaller(c)
+	// GetCaller 返回 (username, ip)；此前误取第二返回值导致申请人/审批人/操作员存成 IP（V77 修复）
+	name, _ := middleware.GetCaller(c)
 	return name
 }
 
