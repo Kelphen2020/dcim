@@ -46,7 +46,7 @@
         <div class="aw-empty-ico"><SvgIcon name="check" /></div>
         <div>当前视图无告警</div>
       </div>
-      <div v-for="a in filtered" :key="a.id" :class="['aw-card', 'sev' + a.severity, { flashed: a._new }]">
+      <div v-for="a in filtered" :key="a.id" :data-aid="a.id" :class="['aw-card', 'sev' + a.severity, { flashed: a._new, targeted: a.id === targetId }]">
         <div class="aw-card-l">
           <input v-if="batchMode && !locked" type="checkbox" class="aw-chk" :value="a.id" v-model="selIds" :disabled="a.status===3" />
           <div class="aw-sev">{{ SEV[a.severity] }}</div>
@@ -111,7 +111,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
 import { showPrompt, toastAuto } from '../ui-dialog'
@@ -125,6 +125,7 @@ const ACTION_NAME = { suspend: '挂起', resume: '恢复待处理', acknowledge:
 
 const alerts = ref([])
 const filter = ref('active')
+const targetId = ref(0) // V76 全局搜索深链定位的告警 id（高亮 2.6s）
 const sound = ref(true)
 const locked = ref(false)
 const clock = ref('')
@@ -266,14 +267,37 @@ onMounted(async () => {
   if (qs >= 1 && qs <= 3) sevOnly.value = qs
   await loadSite()
   await load(false)
+  // V76 全局搜索深链：/alert-wall?alert_id=N → 定位卡片并高亮
+  const aid = Number(route.query.alert_id) || 0
+  if (aid) focusAlert(aid)
   timer = setInterval(() => load(false), 15000)
   clockTimer = setInterval(() => { clock.value = new Date().toLocaleString('zh-CN', { hour12: false }) }, 1000)
+})
+// V76: 定位告警卡片——必要时切换筛选页签/清除severity过滤，滚动居中并高亮
+function focusAlert(id) {
+  const a = alerts.value.find(x => x.id === id)
+  if (!a) { toastAuto('告警 #' + id + ' 不在当前告警墙窗口内'); return }
+  if (sevOnly.value && sevOnly.value !== a.severity) sevOnly.value = 0
+  const want = a.blocked ? 'blocked' : ({ 0: 'pending', 1: 'suspended', 2: 'acked', 3: 'resolved' }[a.status] || 'active')
+  if (!filtered.value.some(x => x.id === id)) filter.value = want
+  targetId.value = id
+  nextTick(() => {
+    document.querySelector(`.aw-card[data-aid="${id}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  })
+  setTimeout(() => { if (targetId.value === id) targetId.value = 0 }, 2600)
+}
+watch(() => route.query, q => {
+  const aid = Number(q.alert_id) || 0
+  if (aid && route.path === '/alert-wall') focusAlert(aid)
 })
 onBeforeUnmount(() => { clearInterval(timer); clearInterval(clockTimer) })
 </script>
 
 <style scoped>
 .aw { min-height: calc(100vh - 40px); }
+/* V76 搜索深链定位高亮 */
+.aw-card.targeted { outline: 2px solid var(--primary, #2563eb); animation: awTarget 1.3s ease 2; }
+@keyframes awTarget { 0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); } 50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, .25); } }
 .aw-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
 .aw-title { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
 .aw-dot { width: 10px; height: 10px; border-radius: 50%; background: #f5222d; animation: pulse 1.5s infinite; }
