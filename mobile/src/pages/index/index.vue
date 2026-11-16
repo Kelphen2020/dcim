@@ -140,6 +140,32 @@
       </view>
     </template>
 
+    <!-- 健康与采购（M7-V77）：数字可穿透到过滤列表 -->
+    <template v-if="!isViewer()">
+      <view class="sec-title"><TechIcon name="gauge" color="#16233D" :size="30" /> 健康与采购</view>
+      <view class="hp-row">
+        <view class="glass-card hp-card" @tap="goHealth()">
+          <view class="hp-t"><TechIcon name="shield" color="#2FA84F" :size="26" /> 资产健康</view>
+          <view class="hp-num" :class="hpCls()">{{ healthSum.total ? healthSum.avg_score : '--' }}</view>
+          <view class="hp-sub muted">平均健康分 · {{ healthSum.total || 0 }} 台</view>
+          <view class="hp-chips">
+            <text class="hp-chip ok" @tap.stop="goHealth('healthy')">健康 {{ gradeN('healthy') }}</text>
+            <text class="hp-chip warn" v-if="gradeN('attention') + gradeN('sub_healthy')" @tap.stop="goHealth('attention')">关注 {{ gradeN('attention') + gradeN('sub_healthy') }}</text>
+            <text class="hp-chip bad" v-if="gradeN('risk')" @tap.stop="goHealth('risk')">风险 {{ gradeN('risk') }}</text>
+          </view>
+        </view>
+        <view class="glass-card hp-card" @tap="goPurchase()">
+          <view class="hp-t"><TechIcon name="box" color="#1F4E9C" :size="26" /> 采购审批</view>
+          <view class="hp-num" :class="{ orange: prPending.total > 0 }">{{ prPending.total }}</view>
+          <view class="hp-sub muted">待审批申请</view>
+          <view class="hp-chips">
+            <text class="hp-chip link" v-if="prPending.latest">{{ prPending.latest.code }} ›</text>
+            <text class="hp-chip" v-else>暂无待办</text>
+          </view>
+        </view>
+      </view>
+    </template>
+
     <!-- 液滴粘连扫码按钮 -->
     <view class="scan-zone glass-card">
       <LiquidDrag icon="scan" origin-icon="pin" :w="liquidW" :h="150" :threshold="110"
@@ -212,7 +238,7 @@
 
 <script>
 import { get } from '../../api.js'
-import { requireAuth, timeAgo, slaLeft, SEV_TEXT, WO_PRIORITY, SHIFT_TEXT, doScan } from '../../util.js'
+import { requireAuth, user, timeAgo, slaLeft, SEV_TEXT, WO_PRIORITY, SHIFT_TEXT, doScan } from '../../util.js'
 import { cylStyle, depthStyle } from '../../fx.js'
 import GlassNavBar from '../../components/GlassNavBar.vue'
 import GlassTabBar from '../../components/GlassTabBar.vue'
@@ -242,6 +268,8 @@ export default {
       assets: { total: 0, rack_on: 0, rack_off: 0, repair: 0, scrapped: 0, by_category: [], cabinet_total: 0, cabinet_used: 0 },
       todayPlans: [],
       spareWarn: { low_count: 0, top: [] },
+      healthSum: { avg_score: 0, total: 0, grades: {}, open_work_orders: 0 },
+      prPending: { total: 0, latest: null },
     }
   },
   computed: {
@@ -339,6 +367,15 @@ export default {
         this.todayPlans = d.today_plans || []
         if (d.spare_warn) this.spareWarn = d.spare_warn
       } catch (e) { /* toast 已弹 */ }
+      // M7-V77 健康与采购聚合（viewer 无权限时静默跳过）
+      if (!this.isViewer()) {
+        const [hs, pr] = await Promise.all([
+          get('/asset-health/summary', { site_id: this.siteId }, { silent: true }).catch(() => null),
+          get('/purchase-requests', { status: 1, page: 1, size: 1 }, { silent: true }).catch(() => null),
+        ])
+        if (hs) this.healthSum = hs
+        if (pr) this.prPending = { total: pr.total || 0, latest: (pr.list || [])[0] || null }
+      }
       // 精确测告警列表位置（H5/小程序均支持）
       this.$nextTick(() => {
         const q = uni.createSelectorQuery().in(this)
@@ -384,6 +421,12 @@ export default {
     goAssetsCat(cat) {
       uni.navigateTo({ url: '/pages/asset/assets?category=' + cat })
     },
+    // M7-V77 健康与采购穿透
+    isViewer() { return user().role === 'viewer' },
+    gradeN(k) { return (this.healthSum.grades || {})[k] || 0 },
+    hpCls() { const v = this.healthSum.avg_score || 0; return v >= 85 ? 'green' : v >= 55 ? 'orange' : 'red' },
+    goHealth(grade) { uni.navigateTo({ url: '/pages/health/list' + (grade ? '?grade=' + grade : ''), fail: () => {} }) },
+    goPurchase() { uni.navigateTo({ url: '/pages/purchase/list?status=1', fail: () => {} }) },
     catText(c) {
       return { server: '服务器', network: '网络设备', storage: '存储', power: '供配电', security: '安防', other: '其他' }[c] || c
     },
@@ -450,6 +493,21 @@ export default {
 .kpi-sub .sub-link { color: #4b5563; text-decoration: underline; text-underline-offset: 4rpx; }
 .kpi-sub.breach { display: flex; align-items: center; gap: 6rpx; color: #e5484d; }
 /* ---- 液滴扫码 ---- */
+/* ---- M7-V77 健康与采购 ---- */
+.hp-row { display: flex; gap: 16rpx; }
+.hp-card { flex: 1; padding: 22rpx 22rpx 18rpx; min-width: 0; }
+.hp-t { font-size: 26rpx; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 8rpx; }
+.hp-num { font-size: 56rpx; font-weight: 800; color: #1f2937; line-height: 1.2; margin-top: 8rpx; }
+.hp-num.green { color: #2fa84f; }
+.hp-num.orange { color: #f5a623; }
+.hp-num.red { color: #e5484d; }
+.hp-sub { font-size: 22rpx; margin-bottom: 12rpx; }
+.hp-chips { display: flex; flex-wrap: wrap; gap: 8rpx; }
+.hp-chip { font-size: 20rpx; padding: 4rpx 12rpx; border-radius: 8rpx; background: #f3f4f6; color: #6b7280; }
+.hp-chip.ok { background: #eef9f0; color: #2fa84f; }
+.hp-chip.warn { background: #fff7e6; color: #d48806; }
+.hp-chip.bad { background: #fff1f0; color: #e5484d; }
+.hp-chip.link { background: #eef4ff; color: #1f4e9c; font-family: monospace; }
 .scan-zone { padding: 20rpx 24rpx 24rpx; }
 .scan-hint { text-align: center; font-size: 23rpx; color: #8a94a6; margin-top: 4rpx; }
 /* ---- 导航栏内 ---- */
