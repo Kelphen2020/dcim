@@ -16,7 +16,7 @@ export const CONFIG = {
   // storage 里保存的服务器地址优先（"我的-服务器设置"可改）
   BASE_URL: saved || base,
   API_PREFIX: '/api/v1',
-  VERSION: 'M1-v35',
+  VERSION: 'M7-v77',
 }
 
 export function setBaseUrl(url) {

@@ -90,8 +90,10 @@ export default {
     }
   },
   computed: { hasMore() { return this.items.length < this.total } },
-  onLoad() {
+  onLoad(q) {
     try { this.navH = (uni.getSystemInfoSync().statusBarHeight || 0) + 44 } catch (e) {}
+    // KPI 穿透深链：工作台分级徽章带 ?grade=risk 直达过滤列表
+    if (q && q.grade && this.chips.some((c) => c.k === q.grade)) this.cur = q.grade
   },
   onPageScroll(e) { this.scrollY = e.scrollTop },
   onShow() {
@@ -129,7 +131,7 @@ export default {
     },
     goDetail(a) {
       uni.setStorageSync('dcim_health_cur', a)
-      uni.navigateTo({ url: '/pages/health/detail?asset_id=' + a.asset_id })
+      uni.navigateTo({ url: '/pages/health/detail?asset_id=' + a.asset_id, fail: () => {} })
     },
   },
 }

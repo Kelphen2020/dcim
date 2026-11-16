@@ -25,7 +25,11 @@
     { "path": "pages/summary/summary", "style": { "navigationBarTitleText": "管理摘要", "enablePullDownRefresh": true } },
     { "path": "pages/maint/maint", "style": { "navigationBarTitleText": "维保与备件", "enablePullDownRefresh": true } },
     { "path": "pages/report/report", "style": { "navigationBarTitleText": "巡检报告", "enablePullDownRefresh": true } },
-    { "path": "pages/report/detail", "style": { "navigationBarTitleText": "报告详情" } }
+    { "path": "pages/report/detail", "style": { "navigationBarTitleText": "报告详情" } },
+    { "path": "pages/health/list", "style": { "navigationBarTitleText": "资产健康", "enablePullDownRefresh": true } },
+    { "path": "pages/health/detail", "style": { "navigationBarTitleText": "健康详情" } },
+    { "path": "pages/purchase/list", "style": { "navigationBarTitleText": "采购审批", "enablePullDownRefresh": true } },
+    { "path": "pages/purchase/detail", "style": { "navigationBarTitleText": "采购详情" } }
   ],
   "globalStyle": {
     "navigationStyle": "custom",

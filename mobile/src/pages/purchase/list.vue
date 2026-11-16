@@ -87,7 +87,7 @@ export default {
     },
     goDetail(pr) {
       uni.setStorageSync('dcim_pr_cur', pr)
-      uni.navigateTo({ url: '/pages/purchase/detail?id=' + pr.id })
+      uni.navigateTo({ url: '/pages/purchase/detail?id=' + pr.id, fail: () => {} })
     },
   },
 }
