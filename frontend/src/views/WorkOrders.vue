@@ -251,8 +251,10 @@ const siteName=id=>(sites.value.find(s=>s.id===id)||{}).name||'-'
 const userName=id=>{if(!id)return '-';const u=users.value.find(x=>x.id===id);return u?u.display_name:'用户#'+id}
 function goAsset(id){const a=assets.value.find(x=>x.id===id);router.push({path:'/assets',query:a?{keyword:a.code}:{}})}
 async function load(p){page.value=p||1;const params={page:page.value,size};if(f.site_id)params.site_id=f.site_id;if(f.status)params.status=f.status;if(f.priority)params.priority=f.priority;if(f.sla)params.sla=f.sla;if(f.keyword)params.keyword=f.keyword;if(route.query.asset_id)params.asset_id=route.query.asset_id;const r=await api.get('/work-orders',params);list.value=r.data?.items||[];total.value=r.data?.total||0
-  // 深链 ?id= 直接打开详情
-  if(route.query.id){const w=list.value.find(x=>x.id===Number(route.query.id));if(w)openDetail(w)}}
+  // 深链 ?id= 直接打开详情（V76: 不在当前页时按 id 兜底拉取）
+  if(route.query.id)openWoById(Number(route.query.id))}
+// V76 全局搜索深链：先查当前列表，未命中再按 id 单查（后端 /work-orders 支持 id 过滤）
+async function openWoById(id){let w=list.value.find(x=>x.id===id);if(!w){const r=await api.get('/work-orders',{id,size:1});w=(r.data?.items||[])[0]}if(w)openDetail(w)}
 async function act(w,action){
   if(action==='finish'){const res=await showPrompt({ title: '完成工单', label: '填写处理结果：', multiline: true });if(res===null)return;const r=await api.post(`/work-orders/${w.id}/finish`,{resolution:res});if(r.code!==0)return toastAuto(r.msg)}
   else if(action==='cancel'){if (!(await showConfirm({ message: `取消工单 ${w.code}？` })))return;const r=await api.post(`/work-orders/${w.id}/cancel`,{});if(r.code!==0)return toastAuto(r.msg)}
@@ -331,7 +333,7 @@ onBeforeUnmount(()=>{if(slaTimer)clearInterval(slaTimer)})
 // V63 深链 ?tab=sla（双路径：onMounted + watch route.query）
 import {watch} from 'vue'
 function applyDeepTab(){if(route.query.tab==='sla'){mainTab.value='sla';if(route.query.days)sla.days=Number(route.query.days)||30;if(!sla.data)loadSla();else loadSla()}}
-watch(()=>route.query,q=>{if(q.tab==='sla')applyDeepTab()})
+watch(()=>route.query,q=>{if(q.tab==='sla')applyDeepTab();if(q.id&&route.path==='/work-orders')openWoById(Number(q.id))})
 onMounted(async()=>{slaTimer=setInterval(()=>{ /* 触发倒计时刷新 */ list.value=[...list.value] },60000)
 const[ss,aa,uu]=await Promise.all([api.get('/sites',{size:100}),api.get('/assets',{size:200}),api.get('/users-options')]);sites.value=ss.data?.items||[];assets.value=aa.data?.items||[];users.value=uu.data?.items||[];form.site_id=sites.value[0]?.id||0;
   // 深链：/work-orders?status=1&priority=3

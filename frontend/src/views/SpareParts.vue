@@ -228,11 +228,18 @@ const router = useRouter()
 const route = useRoute()
 // G批: 大屏低库存穿透深链 ?low_only=1&keyword=CODE（双路径: onMounted+watch，防同组件复用时不重挂载）
 function applyQuery(q) {
+  // V76 全局搜索深链：/spare-parts?id=N&detail=1 → 打开备件详情抽屉
+  if (q && q.id && q.detail === '1') { openPartById(Number(q.id)); return }
   if (q && (q.low_only || q.keyword)) {
     f.lowOnly = q.low_only === '1' || q.low_only === 1
     if (q.keyword) f.keyword = String(q.keyword)
     load(1)
   }
+}
+async function openPartById(id) {
+  const r = await api.get('/spare-parts', { id, size: 1 })
+  const sp = (r.data?.items || [])[0]
+  if (sp) openEdit(sp)
 }
 watch(() => route.query, (q) => { if (route.path === '/spare-parts') applyQuery(q) })
 const CATS = ['电气', '暖通', 'IT设备', '安防', '线缆', '耗材', '其他']

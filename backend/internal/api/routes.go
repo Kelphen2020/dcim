@@ -49,6 +49,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 
 			// 仪表盘（所有角色可读）
 			authed.GET("/dashboard", h.Dashboard)
+			authed.GET("/search", h.GlobalSearch) // V76 B5-1 全局搜索（六类，SiteScope+菜单组权限）
 			authed.GET("/dashboard/insights", h.DashboardInsights) // V65 B1-2 风险与洞察聚合区
 
 			// 四级层级（读开放给所有登录用户，写由 RBAC 控制）

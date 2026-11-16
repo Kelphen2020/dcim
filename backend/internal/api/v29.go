@@ -19,6 +19,9 @@ import (
 // ListSpareParts GET /spare-parts?site_id=&category=&keyword=&low_only=1
 func (h *Handler) ListSpareParts(c *gin.Context) {
 	q := h.DB.Model(&model.SparePart{})
+	if id, _ := strconv.Atoi(c.Query("id")); id > 0 { // V76 深链直达
+		q = q.Where("id = ?", id)
+	}
 	if sid, _ := strconv.Atoi(c.Query("site_id")); sid > 0 {
 		q = q.Where("site_id = ?", sid)
 	}

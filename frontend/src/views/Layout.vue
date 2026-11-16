@@ -77,6 +77,9 @@
       <div class="topbar-right">
         <span class="topbar-build" :title="'前端构建版本与时间（判断浏览器是否拿到最新版）'">{{ buildVer }}</span>
         <span class="topbar-phase" :title="'当前平台版本阶段：' + phase + '（P0骨架→P1资产→P2运维→P3动环→P4网络→P5大屏与高级能力），表示系统已建设到的功能阶段，仅作版本标识'">{{ phase }}</span>
+        <button class="gs-open-btn" title="全局搜索（Ctrl/⌘ + K）：资产/测点/工单/告警/网络设备/备件" @click="searchRef && searchRef.openPal()">
+          <SvgIcon name="search" /><span class="gs-open-label">搜索</span><span class="gs-open-kbd">Ctrl K</span>
+        </button>
         <AIAssistant />
         <div class="bell-wrap" ref="bellWrap">
           <button class="bell-btn" @click="togglePanel" title="消息通知">
@@ -113,7 +116,7 @@
       <div v-if="mobileOpen" class="nav-backdrop" @click="mobileOpen=false"></div>
       <aside class="sidebar" :class="{ open: mobileOpen }">
         <nav>
-          <template v-for="g in visibleMenu" :key="g.key">
+          <template v-for="g in visibleMenu" :key="g.gid || g.key">
             <div class="nav-group">{{ g.label }}</div>
             <router-link v-for="m in g.items" :key="m.to" :to="m.to" @click="mobileOpen = false">
               <span class="nav-ico"><svg><use :href="'#' + m.ico"/></svg></span>{{ m.label }}
@@ -125,6 +128,7 @@
         <router-view />
       </main>
     </div>
+    <GlobalSearch ref="searchRef" :pages="visibleMenu" />
   </div>
 </template>
 
@@ -134,6 +138,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useSettingsStore } from '../stores/settings'
 import AIAssistant from '../components/AIAssistant.vue'
+import GlobalSearch from '../components/GlobalSearch.vue'
 import { BUILD_VERSION } from '../build-info'
 const buildVer = BUILD_VERSION
 import api from '../api'
@@ -142,6 +147,7 @@ import { toastAuto } from '../ui-dialog'
 const router = useRouter()
 const auth = useAuthStore()
 const settings = useSettingsStore()
+const searchRef = ref(null) // V76 全局搜索面板
 
 // ==================== 数据驱动菜单（按功能分组 + 权限过滤） ====================
 // group.key 与后端 allowed_groups 白名单一一对应
@@ -166,16 +172,19 @@ const MENU = [
     { to: '/asset-retirement', label: '资产退役处置', ico: 'i-box' },
     { to: '/maintenances', label: '维保管理', ico: 'i-wrench' }
   ] },
-  { key: 'ops', label: '运维管理', items: [
+  // V76 B5-3: 运维组拆「作业执行 / 知识与预案」两组（权限 key 均保持 ops，路由与深链不变）
+  { key: 'ops', gid: 'ops-exec', label: '作业执行', items: [
     { to: '/work-orders', label: '运维工单', ico: 'i-order' },
     { to: '/duty-roster', label: '值班与交接', ico: 'i-users' },
     { to: '/spare-parts', label: '备件台账', ico: 'i-box' },
-    { to: '/trend-forecast', label: '趋势预测', ico: 'i-trend' },
-    { to: '/fault-cases', label: '故障案例库', ico: 'i-doc' },
-    { to: '/emergency-plans', label: '应急预案与演练', ico: 'i-doc' },
     { to: '/inspection', label: '巡检管理', ico: 'i-inspect' },
     { to: '/inspection-reports', label: '巡检报告', ico: 'i-doc' },
     { to: '/changes', label: '变更管理', ico: 'i-change' }
+  ] },
+  { key: 'ops', gid: 'ops-knowledge', label: '知识与预案', items: [
+    { to: '/trend-forecast', label: '趋势预测', ico: 'i-trend' },
+    { to: '/fault-cases', label: '故障案例库', ico: 'i-doc' },
+    { to: '/emergency-plans', label: '应急预案与演练', ico: 'i-doc' }
   ] },
   { key: 'monitor', label: '动环监控', items: [
     { to: '/monitor', label: '监控总览', ico: 'i-chart' },
@@ -346,6 +355,10 @@ function logout() {
 .badge.kind-system { color: #909399; border-color: rgba(144,147,153,.4); }
 /* 导航分组标题 */
 .nav-group { font-size: 11px; color: var(--muted); padding: 12px 16px 4px; text-transform: uppercase; letter-spacing: .08em; opacity: .7; }
+/* V76 全局搜索入口 */
+.gs-open-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); height: 32px; padding: 0 10px; cursor: pointer; font-size: 12.5px; transition: color .15s, border-color .15s; }
+.gs-open-btn:hover { color: var(--accent); border-color: var(--accent); }
+.gs-open-kbd { font-size: 10px; border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; opacity: .8; }
 
 /* ==================== 移动端适配 ==================== */
 .menu-btn { display: none; }
@@ -362,6 +375,8 @@ function logout() {
   .topbar-build { display: none; }
   .user-name { display: none; }
   .role-tag { display: none; }
+  .gs-open-label, .gs-open-kbd { display: none; }
+  .gs-open-btn { width: 32px; padding: 0; justify-content: center; }
   .topbar-right .btn { flex-shrink: 0; white-space: nowrap; padding: 7px 10px; }
   .bell-panel { position: fixed; top: 56px; left: 8px; right: 8px; width: auto; }
   .app-body { position: relative; }

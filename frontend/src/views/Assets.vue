@@ -353,11 +353,16 @@ onMounted(async()=>{
   if(q.cabinet_id)f.cabinet_id=Number(q.cabinet_id)||0
   if(q.health_grade)f.health_grade=q.health_grade
   load()
+  // V76 全局搜索深链：/assets?id=N&detail=1 → 打开资产详情抽屉
+  if(q.id&&q.detail==='1')openAssetById(Number(q.id))
 })
+// V76: 按 id 拉取资产并打开详情抽屉（后端 /assets 支持 id 过滤）
+async function openAssetById(id){const r=await api.get('/assets',{id,size:1});const a=(r.data?.items||[])[0];if(a)openForm(a)}
 // V50: Dashboard 健康卡穿透（应用内跳转同组件不重挂载，watch 兜底）
 watch(()=>route.query,q=>{
   if(q.health_grade!==undefined&&q.health_grade!==f.health_grade){f.health_grade=q.health_grade||'';load(1)}
   if(!q.health_grade&&f.health_grade&&route.path==='/assets'){/* 保持当前筛选 */}
+  if(q.id&&q.detail==='1'&&route.path==='/assets')openAssetById(Number(q.id))
 })
 
 function applyTpl(t){tplShow.value=false;Object.assign(form,{show:true,id:0,code:'',name:t.name,category:t.category,site_id:sites.value[0]?.id||0,room_id:0,brand:'',model:'',sn:'',ip:'',asset_no:'',fixed_asset_no:'',purchase_at:'',vendor:'',contract_no:'',owner:'',department:'',height_u:t.height_u,power_w:t.power_w,weight_kg:t.weight_kg,dimensions:'',remark:'',err:''})}
